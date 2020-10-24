@@ -11,13 +11,14 @@ YELLOW = (255,255,0)
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 GREY = (180, 180, 180)
-GREEN = (255, 0, 255)
+GREEN = (0, 128, 0)
 ORANGE = (255,140,0)
+PURPLE = (150, 0, 210)
 
 finish = False
 width = 800
-rows = 10
-columns = 10
+rows = 20
+columns = 20
 margin = width // rows
 
 screen = pygame.display.set_mode((800, 800))
@@ -33,15 +34,15 @@ class grid():
         self.hCost = 0
         self.fCost = 0
     def closeSet(self):
-        self.color = BLACK
-    def openSet(self):
         self.color = YELLOW
+    def openSet(self):
+        self.color = RED
     def startPos(self):
         self.color = GREEN
     def endPos(self):
         self.color = BLUE
     def getPath(self):
-        self.color = RED
+        self.color = PURPLE
     def getPos(self):
         return [self.x, self.y]
     def draw(self, screen, margin):
@@ -71,8 +72,6 @@ class a_pathfinding:
         self.draw = draw
         self.start = start
         self.end = end
-        # self.gCosts = {each_grid: float("inf") for grid in grids for each_grid in grid}
-        # self.gCosts[start] = 0
         self.fCosts = {each_grid: float("inf") for grid in grids for each_grid in grid}
         self.fCosts[start] = self.distance_of_grids(self.start.getPos(), self.end.getPos())
 
@@ -87,6 +86,7 @@ class a_pathfinding:
                 while current in self.all_path:
                     current.getPath()
                     self.draw()
+                return True
 
             for neighbor in current.neighbors:
                 for closed_neighbor in self.closedSet:
@@ -100,7 +100,6 @@ class a_pathfinding:
                 if neighbor.fCost < self.fCosts[neighbor]:
                     self.all_path.add(neighbor)
                     self.fCosts[neighbor] = neighbor.fCost
-                    # self.gCosts[neighbor] = neighbor.gCost
                     self.counter += 1
                     self.openQ.put((neighbor.fCost, self.counter, neighbor))
                     neighbor.openSet()
@@ -109,6 +108,7 @@ class a_pathfinding:
             self.draw()
             if current != self.start:
                 current.closeSet()
+        return False
 
     def distance_of_grids(self, pos1, pos2):
         x1, y1 = pos1
@@ -166,11 +166,13 @@ while not finish:
                 for grid in grids:
                     for each_grid in grid:
                         each_grid.getNeighbors(grids)
-                algorithm.pathfinder()
+                if algorithm.pathfinder():
+                    finish = true
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_c:
                 start = None
                 end = None
                 grid = make_grid(ROWS, width)
+                continue
     draw_update(screen, grids, rows, columns, margin)
