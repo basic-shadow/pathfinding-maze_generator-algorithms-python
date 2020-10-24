@@ -11,13 +11,14 @@ YELLOW = (255,255,0)
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 GREY = (180, 180, 180)
-GREEN = (255, 0, 255)
+GREEN = (0, 128, 0)
 ORANGE = (255,140,0)
+PURPLE = (150, 0, 210)
 
 finish = False
 width = 800
-rows = 10
-columns = 10
+rows = 20
+columns = 20
 margin = width // rows
 
 screen = pygame.display.set_mode((800, 800))
@@ -33,15 +34,15 @@ class grid():
         self.hCost = 0
         self.fCost = 0
     def closeSet(self):
-        self.color = BLACK
-    def openSet(self):
         self.color = YELLOW
+    def openSet(self):
+        self.color = RED
     def startPos(self):
         self.color = GREEN
     def endPos(self):
         self.color = BLUE
     def getPath(self):
-        self.color = RED
+        self.color = PURPLE
     def getPos(self):
         return [self.x, self.y]
     def draw(self, screen, margin):
@@ -56,57 +57,59 @@ class grid():
             self.neighbors.append(grids[self.x][self.y + 1])    # NEIGHBOR AT BOTTOM
         if self.y > 0:
             self.neighbors.append(grids[self.x][self.y - 1])    # NEIGHBOR AT TOP
-        return self.neighbors
-    def neighborsPos(self):
 
-def distance_of_grids(pos1, pos2):
-    return math.sqrt((pos2[0] - pos1[0])**2 + (pos2[1] - pos1[1])**2)
+class a_pathfinding:
+    def __init__(self, start, end, grids, draw):
+        self.openQ = PriorityQueue()
+        self.counter = 0
+        self.openQ.put((0, self.counter, start))
+        self.came_from = {}
+        self.draw = draw
+        self.start = start
+        self.end = end
+        self.fCosts = {each_grid: float("inf") for grid in grids for each_grid in grid}
+        self.fCosts[start] = self.distance_of_grids(self.start.getPos(), self.end.getPos())
+        self.closedSet = set()
 
-def a_pathfinding(start, end, grids):
-    openSet = []
-    closedSet = []
-    start.fCost = start.gCost = start.hCost = 0
-    end.fCost = end.gCost = end.hCost = 0
-    openList.append(start)
-    count = 0
-    path = set()
-    path.add(start)
+    def pathfinder(self):
+        while not self.openQ.empty():
+            current = self.openQ.get()[2]
 
-    while len(openList) > 0:
-        current = openList[count]
-        currentIndex = count
+            if current == self.end:
+                while current in self.came_from:
+                    current = self.came_from[current]
+                    current.getPath()
+                    self.draw()
 
-        for index, item in enumerate(openList):
-            if item.fCost < current.fCost:
-                current = itemvnm
-                currentIndex = index
+                self.end.endPos()
+                self.start.startPos()
+                return True
 
-        openList.pop(currentIndex)
-        closedList.append(current)
+            for neighbor in current.neighbors:
+                for closed_neighbor in self.closedSet:
+                    if neighbor == closed_neighbor:
+                        neighbor.closeSet()
+                        continue
 
-        if current == end:
-            path
-            while current is not None:
-                path.append(current.getPos())
-                current = current.parent
+                neighbor.gCost = current.gCost + 1
+                neighbor.hCost = self.distance_of_grids(neighbor.getPos(), self.end.getPos())
+                neighbor.fCost = neighbor.gCost + neighbor.hCost
+                if neighbor.fCost < self.fCosts[neighbor]:
+                    self.came_from[neighbor] = current
+                    self.fCosts[neighbor] = neighbor.fCost
+                    if neighbor not in self.closedSet:
+                        self.counter += 1
+                        self.openQ.put((self.fCosts[neighbor], self.counter, neighbor))
+                        neighbor.openSet()
+                        self.closedSet.add(neighbor)
 
-            return path[::-1]
+            self.draw()
+        return False
 
-        for neighbor in current.getNeighbors(grids):
-            for closed_neighbor in closedList:
-                if neighbor == closed_neighbor:
-                    continue
-
-            neighbor.gCost = current.gCost + 1
-            neighbor.hCost = distance_of_grids(neighbor.)
-            neighbor.fCost = neighbor.gCost + neighbor.hCost
-
-            for openGrids in openList:
-                if neighbor == openGrids and neighbor.gCost > openGrids.gCost:
-                    continue
-            openList.append(neighbor)
-
-
+    def distance_of_grids(self, pos1, pos2):
+        x1, y1 = pos1
+        x2, y2 = pos2
+        return abs(x2 - x1) + abs(y2 - y1)
 
 def drawGrid(screen, margin, rows, columns):
     for i in range(rows):
@@ -140,6 +143,7 @@ def draw_update(screen, grids, rows, columns, margin):
 start = None
 end = None
 grids = createGrids(columns,rows)
+print(grids[1][2])
 while not finish:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -153,6 +157,12 @@ while not finish:
             elif start and not end:
                 end = new_grid
                 end.endPos()
+                algorithm = a_pathfinding(start, end, grids, lambda : draw_update(screen, grids, rows, columns, margin))
             elif start and end:
-                pass
+                for grid in grids:
+                    for each_grid in grid:
+                        each_grid.getNeighbors(grids)
+
+                algorithm.pathfinder()
+
     draw_update(screen, grids, rows, columns, margin)
