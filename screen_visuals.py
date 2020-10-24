@@ -1,6 +1,7 @@
 import pygame
 import sys
 import a_star_pathfinding_algorithm as a_algorithm
+import maze_generator as maze
 
 pygame.init()
 
@@ -79,7 +80,6 @@ def getPosByMouse(pos, margin):
     return [pos[0], pos[1]]
 
 def draw_update(screen, grids, rows, columns, margin):
-
     for grid in grids:
         for each_grid in grid:
             each_grid.draw(screen, margin)
@@ -90,7 +90,7 @@ def draw_update(screen, grids, rows, columns, margin):
 start = None
 end = None
 grids = createGrids(columns,rows)
-print(grids[1][2])
+
 while not finish:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
