@@ -43,7 +43,6 @@ class a_pathfinding:
                     if neighbor not in self.closedSet:
                         self.counter += 1
                         self.openQ.put((self.fCosts[neighbor], self.counter, neighbor))
-                        neighbor.openSet()
                         self.closedSet.add(neighbor)
 
             self.draw()

@@ -1,7 +1,7 @@
 import pygame
 import sys
-import a_star_pathfinding_algorithm as a_algorithm
-import maze_generator as maze
+import a_star_pathfinding_algorithm as a_star_algorithm
+import maze_generator as recursive_maze
 
 pygame.init()
 
@@ -10,16 +10,19 @@ BLUE = (0, 0, 255)
 YELLOW = (255,255,0)
 BLACK = (0,0,0)
 WHITE = (255,255,255)
-GREY = (180, 180, 180)
+GREY = (190, 190, 190)
 GREEN = (0, 128, 0)
 ORANGE = (255,140,0)
 PURPLE = (150, 0, 210)
 
 finish = False
 width = 800
-rows = 20
-columns = 20
-margin = width // rows
+rows = 50
+columns = 50
+if rows < columns:
+    margin = width // rows
+else:
+    margin = width // columns
 
 screen = pygame.display.set_mode((800, 800))
 
@@ -33,31 +36,38 @@ class grid():
         self.gCost = 0
         self.hCost = 0
         self.fCost = 0
+    def current(self):
+        self.color = RED
     def closeSet(self):
         self.color = YELLOW
-    def openSet(self):
-        self.color = RED
     def startPos(self):
-        self.color = GREEN
+        self.color = PURPLE
     def endPos(self):
         self.color = BLUE
     def getPath(self):
-        self.color = PURPLE
+        self.color = GREEN
+    def maze(self):
+        self.color = WHITE
     def getPos(self):
         return [self.x, self.y]
+    def isMaze(self):
+        return self.color == WHITE
+    def walls(self):
+        self.color = BLACK
+    def isWalls(self):
+        return self.color == BLACK
     def draw(self, screen, margin):
         pygame.draw.rect(screen, self.color, (self.x * margin, self.y * margin, margin, margin))
     def getNeighbors(self, grids):
         self.neighbors = []
-        if self.x < self.rows - 1:
+        if self.x < self.rows - 1 and not grids[self.x + 1][self.y].isWalls():
             self.neighbors.append(grids[self.x + 1][self.y])    # NEIGHBOR AT RIGHT
-        if self.x > 0:
+        if self.x > 0 and not grids[self.x - 1][self.y].isWalls():
             self.neighbors.append(grids[self.x - 1][self.y])    # NEIGHBOR AT LEFT
-        if self.y < self.columns - 1:
+        if self.y < self.columns - 1 and not grids[self.x][self.y + 1].isWalls():
             self.neighbors.append(grids[self.x][self.y + 1])    # NEIGHBOR AT BOTTOM
-        if self.y > 0:
+        if self.y > 0 and not grids[self.x][self.y - 1].isWalls():
             self.neighbors.append(grids[self.x][self.y - 1])    # NEIGHBOR AT TOP
-
 
 def drawGrid(screen, margin, rows, columns):
     for i in range(rows):
@@ -90,7 +100,6 @@ def draw_update(screen, grids, rows, columns, margin):
 start = None
 end = None
 grids = createGrids(columns,rows)
-
 while not finish:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -104,12 +113,20 @@ while not finish:
             elif start and not end:
                 end = new_grid
                 end.endPos()
-                algorithm = a_algorithm.a_pathfinding(start, end, grids, lambda : draw_update(screen, grids, rows, columns, margin))
+                algorithm = a_star_algorithm.a_pathfinding(start, end, grids, lambda : draw_update(screen, grids, rows, columns, margin))
             elif start and end:
                 for grid in grids:
                     for each_grid in grid:
                         each_grid.getNeighbors(grids)
 
                 algorithm.pathfinder()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                mazegenerator = recursive_maze.MazeGenerator(start, columns, rows, grids, lambda : draw_update(screen, grids, rows, columns, margin))
+                for grid in grids:
+                    for each_grid in grid:
+                        each_grid.getNeighbors(grids)
+                mazegenerator.generator()
+
 
     draw_update(screen, grids, rows, columns, margin)

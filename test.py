@@ -1,7 +1,7 @@
 import pygame
 import sys
-from queue import PriorityQueue
-import math
+import a_star_pathfinding_algorithm as a_algorithm
+import random
 
 pygame.init()
 
@@ -10,16 +10,19 @@ BLUE = (0, 0, 255)
 YELLOW = (255,255,0)
 BLACK = (0,0,0)
 WHITE = (255,255,255)
-GREY = (180, 180, 180)
+GREY = (190, 190, 190)
 GREEN = (0, 128, 0)
 ORANGE = (255,140,0)
 PURPLE = (150, 0, 210)
 
 finish = False
 width = 800
-rows = 20
-columns = 20
-margin = width // rows
+rows = 50
+columns = 50
+if rows < columns:
+    margin = width // rows
+else:
+    margin = width // columns
 
 screen = pygame.display.set_mode((800, 800))
 
@@ -38,78 +41,113 @@ class grid():
     def openSet(self):
         self.color = RED
     def startPos(self):
-        self.color = GREEN
+        self.color = YELLOW
     def endPos(self):
         self.color = BLUE
     def getPath(self):
         self.color = PURPLE
+    def maze(self):
+        self.color = WHITE
     def getPos(self):
         return [self.x, self.y]
+    def isMaze(self):
+        return self.color == WHITE
+    def walls(self):
+        self.color = BLACK
+    def isWalls(self):
+        return self.color == BLACK
     def draw(self, screen, margin):
         pygame.draw.rect(screen, self.color, (self.x * margin, self.y * margin, margin, margin))
     def getNeighbors(self, grids):
         self.neighbors = []
-        if self.x < self.rows - 1:
+        if self.x < self.rows - 1 and not grids[self.x + 1][self.y].isWalls():
             self.neighbors.append(grids[self.x + 1][self.y])    # NEIGHBOR AT RIGHT
-        if self.x > 0:
+        if self.x > 0 and not grids[self.x - 1][self.y].isWalls():
             self.neighbors.append(grids[self.x - 1][self.y])    # NEIGHBOR AT LEFT
-        if self.y < self.columns - 1:
+        if self.y < self.columns - 1 and not grids[self.x][self.y + 1].isWalls():
             self.neighbors.append(grids[self.x][self.y + 1])    # NEIGHBOR AT BOTTOM
-        if self.y > 0:
+        if self.y > 0 and not grids[self.x][self.y - 1].isWalls():
             self.neighbors.append(grids[self.x][self.y - 1])    # NEIGHBOR AT TOP
 
-class a_pathfinding:
-    def __init__(self, start, end, grids, draw):
-        self.openQ = PriorityQueue()
-        self.counter = 0
-        self.openQ.put((0, self.counter, start))
-        self.came_from = {}
+class MazeGenerator:
+    def __init__(self, start, columns, rows, grids, draw):
         self.draw = draw
+        self.columns = columns
+        self.rows = rows
         self.start = start
-        self.end = end
-        self.fCosts = {each_grid: float("inf") for grid in grids for each_grid in grid}
-        self.fCosts[start] = self.distance_of_grids(self.start.getPos(), self.end.getPos())
-        self.closedSet = set()
+        self.visitedGrids = []
+        self.grids = grids
+        self.stack = []
+        # self._dir_one = [                         #in Prims' algorithm
+        #     lambda x, y: [x + 1, y],
+        #     lambda x, y: [x - 1, y],
+        #     lambda x, y: [x, y - 1],
+        #     lambda x, y: [x, y + 1]
+        # ]
+        # self._dir_two = [
+        #     lambda x, y: [x + 2, y],
+        #     lambda x, y: [x - 2, y],
+        #     lambda x, y: [x, y - 2],
+        #     lambda x, y: [x, y + 2]
+        # ]
+        # self._range = list(range(3))
 
-    def pathfinder(self):
-        while not self.openQ.empty():
-            current = self.openQ.get()[2]
+    def divider(self):
+        for x in range(self.rows):
+            for y in range(self.columns):
+                if x % 2 == 1 or y % 2 == 1:
+                    self.grids[x][y].walls()
 
-            if current == self.end:
-                while current in self.came_from:
-                    current = self.came_from[current]
-                    current.getPath()
-                    self.draw()
+    def generator(self):
+        self.divider()
+        x = random.randrange(0, self.rows - 1, 2)
+        y = random.randrange(0, self.columns - 1, 2)
+        self.stack.append(self.grids[x][y])
+        self.visitedGrids.append([self.grids[x][y].getPos()])
+        current = self.grids[x][y]
 
-                self.end.endPos()
-                self.start.startPos()
-                return True
+        while len(self.stack) > 0:
+            each_grid = []
+            x, y = current.getPos()[0], current.getPos()[1]
+            if [x + 2, y] not in self.visitedGrids and not self.out_of_bounds([x + 2, y]) and not self.grids[x + 2][y].isWalls():
+                each_grid.append("right")
+            if [x - 2, y] not in self.visitedGrids and not self.out_of_bounds([x - 2, y]) and not self.grids[x - 2][y].isWalls():
+                each_grid.append("left")
+            if [x, y - 2] not in self.visitedGrids and not self.out_of_bounds([x, y - 2]) and not self.grids[x][y - 2].isWalls():
+                each_grid.append("top")
+            if [x, y + 2] not in self.visitedGrids and not self.out_of_bounds([x, y + 2]) and not self.grids[x][y + 2].isWalls():
+                each_grid.append("bottom")
 
-            for neighbor in current.neighbors:
-                for closed_neighbor in self.closedSet:
-                    if neighbor == closed_neighbor:
-                        neighbor.closeSet()
-                        continue
+            if len(each_grid) > 0:
+                random_grid = random.choice(each_grid)
 
-                neighbor.gCost = current.gCost + 1
-                neighbor.hCost = self.distance_of_grids(neighbor.getPos(), self.end.getPos())
-                neighbor.fCost = neighbor.gCost + neighbor.hCost
-                if neighbor.fCost < self.fCosts[neighbor]:
-                    self.came_from[neighbor] = current
-                    self.fCosts[neighbor] = neighbor.fCost
-                    if neighbor not in self.closedSet:
-                        self.counter += 1
-                        self.openQ.put((self.fCosts[neighbor], self.counter, neighbor))
-                        neighbor.openSet()
-                        self.closedSet.add(neighbor)
+                if random_grid == "right":
+                    self.grids[x + 1][y].maze()
+                    self.visitedGrids.append([x + 2, y])
+                    self.stack.append(self.grids[x + 2][y])
+
+                elif random_grid == "left":
+                    self.grids[x - 1][y].maze()
+                    self.visitedGrids.append([x - 2, y])
+                    self.stack.append(self.grids[x - 2][y])
+
+                elif random_grid == "top":
+                    self.grids[x][y - 1].maze()
+                    self.visitedGrids.append([x, y - 2])
+                    self.stack.append(self.grids[x][y - 2])
+
+                elif random_grid == "bottom":
+                    self.grids[x][y + 1].maze()
+                    self.visitedGrids.append([x, y + 2])
+                    self.stack.append(self.grids[x][y + 2])
+            else:
+                current = self.stack.pop()
 
             self.draw()
-        return False
 
-    def distance_of_grids(self, pos1, pos2):
-        x1, y1 = pos1
-        x2, y2 = pos2
-        return abs(x2 - x1) + abs(y2 - y1)
+
+    def out_of_bounds(self, pos):
+        return pos[0] < 0 or pos[1] < 0 or pos[0] >= self.rows or pos[1] >= self.columns
 
 def drawGrid(screen, margin, rows, columns):
     for i in range(rows):
@@ -132,7 +170,6 @@ def getPosByMouse(pos, margin):
     return [pos[0], pos[1]]
 
 def draw_update(screen, grids, rows, columns, margin):
-
     for grid in grids:
         for each_grid in grid:
             each_grid.draw(screen, margin)
@@ -143,7 +180,6 @@ def draw_update(screen, grids, rows, columns, margin):
 start = None
 end = None
 grids = createGrids(columns,rows)
-print(grids[1][2])
 while not finish:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -157,12 +193,20 @@ while not finish:
             elif start and not end:
                 end = new_grid
                 end.endPos()
-                algorithm = a_pathfinding(start, end, grids, lambda : draw_update(screen, grids, rows, columns, margin))
+                algorithm = a_algorithm.a_pathfinding(start, end, grids, lambda : draw_update(screen, grids, rows, columns, margin))
             elif start and end:
                 for grid in grids:
                     for each_grid in grid:
                         each_grid.getNeighbors(grids)
 
                 algorithm.pathfinder()
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                mazegenerator = MazeGenerator(start, columns, rows, grids, lambda : draw_update(screen, grids, rows, columns, margin))
+                for grid in grids:
+                    for each_grid in grid:
+                        each_grid.getNeighbors(grids)
+                mazegenerator.generator()
+
 
     draw_update(screen, grids, rows, columns, margin)
