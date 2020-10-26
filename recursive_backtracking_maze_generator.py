@@ -1,27 +1,15 @@
 import random
+import pygame
 
 class MazeGenerator:
-    def __init__(self, start, columns, rows, grids, draw):
+    def __init__(self, columns, rows, grids, draw):
         self.draw = draw
         self.columns = columns
         self.rows = rows
-        self.start = start
         self.visitedGrids = []
         self.grids = grids
         self.stack = []
-        # self.one_grid = [                         #in Prims' algorithm
-        #     lambda x, y: [x + 1, y],
-        #     lambda x, y: [x - 1, y],
-        #     lambda x, y: [x, y - 1],
-        #     lambda x, y: [x, y + 1]
-        # ]
-        # self.two_grids = [
-        #     lambda x, y: [x + 2, y],
-        #     lambda x, y: [x - 2, y],
-        #     lambda x, y: [x, y - 2],
-        #     lambda x, y: [x, y + 2]
-        # ]
-        # self.list_grids = list(range(3))
+        self.clock = pygame.time.Clock()
 
     def divider(self):
         for x in range(self.rows):
@@ -37,7 +25,15 @@ class MazeGenerator:
         self.visitedGrids.append([self.grids[x][y].getPos()])
         current = self.grids[x][y]
         current.current()
+        k = 20
         while len(self.stack) > 0:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        k = 100
+            self.clock.tick(k)
             each_grid = []
             current.maze()
             x, y = current.getPos()[0], current.getPos()[1]
