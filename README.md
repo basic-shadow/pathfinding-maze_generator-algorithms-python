@@ -10,7 +10,7 @@ In the main screen_visuals you can choose the start point with the ***Left Click
   Mainly utilized two algorithms to generate maze: ***Recursive Backtracking Algorithm*** and ***Randomized Prim's Algorithm***. Both of these algorithms general implementation code and the logic of accomplishments can be found here: https://en.wikipedia.org/wiki/Maze_generation_algorithm
   
 **Recursive backtracking algorithm**
-  As the name says this algorithm generates maze using backtracking recursively. In the program you can generate maze with this algorithm pressing ***SPACE*** with initial average speed, to increase its speed press again ***SPACE***. After completion of maze you can use ***A* Pathfinding Algorithm** to visualize its performance in randomly generated maze.
+  As the name says this algorithm generates maze using backtracking recursively. In the program you can generate maze with this algorithm pressing ***SPACE*** with initial average speed, to increase its speed press again ***SPACE***. After completion of maze you can use ***A Star Pathfinding Algorithm*** to visualize its performance in randomly generated maze.
   
 **Randomized Prim's Algorithm**
-  This algorithm is based on *Prim's Algorithm*, but connects nodes with its neighbors randomly. In the program to generate maze with this algorithm press ***C*** with average speed, to increase its speed press again ***C***. In the same way, you can check the performance of ***A* Pathfinding Algorithm** after completion of maze.
+  This algorithm is based on *Prim's Algorithm*, but connects nodes with its neighbors randomly. In the program to generate maze with this algorithm press ***C*** with average speed, to increase its speed press again ***C***. In the same way, you can check the performance of ***A Star Pathfinding Algorithm*** after completion of maze.
