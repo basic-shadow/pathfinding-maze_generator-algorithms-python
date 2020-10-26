@@ -1,5 +1,4 @@
-# Python Project
-
+# PYTHON
 # Pathfinding Algorithm
 
   Implemented A_Star_Pathfinding algorithm in python and set it up in one of python modules, pygame, where that algortihm can be seen in action.
