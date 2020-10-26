@@ -21,8 +21,8 @@ GREY = (60, 60, 60)
 
 finish = False
 width = 800
-rows = 20
-columns = 20
+rows = 40
+columns = 40
 if rows < columns:
     margin = width // rows
 else:
